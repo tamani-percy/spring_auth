@@ -1,0 +1,62 @@
+package com.spring.spring_auth.configs.security.oauth;
+
+import com.spring.spring_auth.configs.jwt.JwtAuthenticationProvider;
+import com.spring.spring_auth.models.ERole;
+import com.spring.spring_auth.models.Provider;
+import com.spring.spring_auth.models.Role;
+import com.spring.spring_auth.models.User;
+import com.spring.spring_auth.repositories.ProviderRepository;
+import com.spring.spring_auth.repositories.RoleRepository;
+import com.spring.spring_auth.repositories.UserRepository;
+import com.spring.spring_auth.utilities.ProviderHelper;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+@Component
+public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final ProviderRepository providerRepository;
+    private final JwtAuthenticationProvider jwtAuthenticationProvider;
+
+    public OAuthSuccessHandler(UserRepository userRepository, RoleRepository roleRepository, ProviderRepository providerRepository, JwtAuthenticationProvider jwtAuthenticationProvider) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.providerRepository = providerRepository;
+        this.jwtAuthenticationProvider = jwtAuthenticationProvider;
+    }
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
+        OAuth2User oauthUser = authToken.getPrincipal();
+        System.out.println(oauthUser);
+        String email = oauthUser.getAttribute("email");
+        String sub = oauthUser.getAttribute("sub");
+        assert sub != null;
+        String provider = sub.split("\\|")[0];
+        if (userRepository.findByUsername(email).isEmpty()) {
+            User user = new User();
+            user.setUsername(email);
+            Role role = roleRepository.findByRole(ERole.ROLE_USER).orElseThrow(() -> new RuntimeException("Role not found"));
+            Provider existingProvider = providerRepository.findByProvider(ProviderHelper.getProvider(provider)).orElseThrow(() -> new RuntimeException("Provider not found"));
+            user.setProvider(existingProvider);
+            user.setRole(role);
+            userRepository.save(user);
+            String jwtToken = jwtAuthenticationProvider.generateJwtToken(user);
+            System.out.println(jwtToken);
+        } else {
+            User user = userRepository.findByUsername(email).orElseThrow(() -> new RuntimeException("User not found"));
+            String jwtToken = jwtAuthenticationProvider.generateJwtToken(user);
+            System.out.println(jwtToken);
+        }
+    }
+}
