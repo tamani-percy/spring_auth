@@ -91,7 +91,7 @@ public class WebSecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(List.of(
-                "http://localhost:8080"
+                "http://localhost:5173"
         ));
         corsConfiguration.setMaxAge(Duration.ofSeconds(3600));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));

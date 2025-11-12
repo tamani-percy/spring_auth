@@ -5,11 +5,15 @@ import com.spring.spring_auth.configs.security.services.UserDetailsImpl;
 import com.spring.spring_auth.dtos.requests.LoginRequest;
 import com.spring.spring_auth.dtos.requests.SignupRequest;
 import com.spring.spring_auth.dtos.responses.LoginResponse;
+import com.spring.spring_auth.dtos.responses.LogoutResponse;
 import com.spring.spring_auth.models.*;
 import com.spring.spring_auth.repositories.ProviderRepository;
 import com.spring.spring_auth.repositories.RoleRepository;
 import com.spring.spring_auth.repositories.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -105,12 +109,26 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Generate JWT
-        String jwtToken = jwtAuthenticationProvider.generateJwtToken(user);
+        ResponseCookie jwtToken = jwtAuthenticationProvider.generateJwtCookie(user);
 
         // Return success response
-        return ResponseEntity.ok(
-                new LoginResponse(jwtToken, userDetails.getUsername())
-        );
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtToken.toString())
+                .body(new LoginResponse(userDetails.getUsername()));
+
     }
 
+    public ResponseEntity<?> logout() {
+        ResponseCookie jwtToken = jwtAuthenticationProvider.getCleanJwtCookie();
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtToken.toString())
+                .body(new LogoutResponse("You've been signed out!"));
+    }
+
+    public ResponseEntity<Boolean> verifyToken(HttpServletRequest httpServletRequest) {
+        String token = jwtAuthenticationProvider.getTokenFromCookie(httpServletRequest);
+        if (token != null && jwtAuthenticationProvider.validateToken(token)) {
+            return ResponseEntity.ok().body(true);
+        } else {
+            return ResponseEntity.ok().body(false);
+        }
+    }
 }

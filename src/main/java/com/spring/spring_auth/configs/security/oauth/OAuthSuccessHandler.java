@@ -12,6 +12,7 @@ import com.spring.spring_auth.utilities.ProviderHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -35,7 +36,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
     }
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oauthUser = authToken.getPrincipal();
         System.out.println(oauthUser);
@@ -51,12 +52,14 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
             user.setProvider(existingProvider);
             user.setRole(role);
             userRepository.save(user);
-            String jwtToken = jwtAuthenticationProvider.generateJwtToken(user);
-            System.out.println(jwtToken);
+            ResponseCookie responseCookie = jwtAuthenticationProvider.generateJwtCookie(user);
+            response.setHeader("Set-Cookie", responseCookie.toString());
+            response.sendRedirect("http://localhost:5173/dashboard");
         } else {
             User user = userRepository.findByUsername(email).orElseThrow(() -> new RuntimeException("User not found"));
-            String jwtToken = jwtAuthenticationProvider.generateJwtToken(user);
-            System.out.println(jwtToken);
+            ResponseCookie responseCookie = jwtAuthenticationProvider.generateJwtCookie(user);
+            response.setHeader("Set-Cookie", responseCookie.toString());
+            response.sendRedirect("http://localhost:5173/dashboard");
         }
     }
 }
