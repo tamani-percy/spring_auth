@@ -3,10 +3,13 @@ package com.spring.spring_auth.controllers;
 import com.spring.spring_auth.dtos.requests.LoginRequest;
 import com.spring.spring_auth.dtos.requests.SignupRequest;
 import com.spring.spring_auth.services.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/auth/")
@@ -30,17 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        return authService.login(loginRequest);
-    }
-
-    @PostMapping("logout")
-    public ResponseEntity<?> logout() {
-        return authService.logout();
-    }
-
-    @GetMapping("verify-token")
-    public ResponseEntity<Boolean> verifyToken(HttpServletRequest request) {
-        return authService.verifyToken(request);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse httpServletResponse) {
+        return authService.login(loginRequest, httpServletResponse);
     }
 }

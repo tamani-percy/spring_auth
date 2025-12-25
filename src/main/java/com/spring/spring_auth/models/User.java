@@ -22,8 +22,14 @@ public class User {
     @Column(name = "username", length = 50)
     private String username;
 
+    @Column(name = "email", unique = true)
+    private String email;
+
     @Column(name = "password")
     private String password;
+
+    @Column(name = "authorization_code")
+    private String authorizationCode;
 
     @ManyToOne
     @JoinColumn(name = "provider_id", nullable = false)

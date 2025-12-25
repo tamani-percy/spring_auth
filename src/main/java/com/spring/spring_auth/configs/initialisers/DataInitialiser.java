@@ -4,6 +4,7 @@ import com.spring.spring_auth.models.*;
 import com.spring.spring_auth.repositories.ProviderRepository;
 import com.spring.spring_auth.repositories.RoleRepository;
 import com.spring.spring_auth.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,12 @@ import java.util.UUID;
 
 @Configuration
 public class DataInitialiser {
+
+    @Value("${sa_email}")
+    private String sa_email;
+    @Value("${sa_password}")
+    private String sa_password;
+
     @Bean
     CommandLineRunner initRolesAndSuperAdmin(RoleRepository roleRepository,
                                              ProviderRepository providerRepository,
@@ -41,26 +48,13 @@ public class DataInitialiser {
 
             if (superAdmins.isEmpty()) {
                 User superAdmin1 = new User();
-                superAdmin1.setUsername("sa_" + UUID.randomUUID());
-                superAdmin1.setPassword(passwordEncoder.encode("supersecurepassword"));
+                superAdmin1.setEmail(sa_email);
+                superAdmin1.setPassword(passwordEncoder.encode(sa_password));
                 superAdmin1.setCreatedAt(LocalDateTime.now());
                 superAdmin1.setRole(superAdminRole);
                 superAdmin1.setProvider(provider);
                 userRepository.save(superAdmin1);
-            }
-
-            if (superAdmins.size() == 1) {
-                User superAdmin2 = new User();
-                superAdmin2.setUsername("sa_" + UUID.randomUUID());
-                superAdmin2.setPassword(passwordEncoder.encode("supersecurepassword2"));
-                superAdmin2.setCreatedAt(LocalDateTime.now());
-                superAdmin2.setRole(superAdminRole);
-                superAdmin2.setProvider(provider);
-                userRepository.save(superAdmin2);
-            }
-
-            if (superAdmins.size() >= 2) {
-                System.out.println("⚠️ Maximum number of SUPER_ADMIN users already exists (" + superAdmins.size() + "). No new SUPER_ADMIN created.");
+                System.out.println("Added superAdmin1");
             }
         };
     }
